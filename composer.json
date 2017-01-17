@@ -1,0 +1,34 @@
+{
+  "name": "develandoo/yii2-push-notification",
+  "description": "Yii2 apns/gcm push notification",
+  "keywords": [
+    "yii2",
+    "notification",
+    "push",
+    "develandoo"
+  ],
+  "homepage": "https://github.com/develandoo/yii2-push-notification",
+  "type": "yii2-extension",
+  "license": "BSD-3-Clause",
+  "company": {
+    "name": "DEVELANDOO",
+    "email": "solutions@develandoo.com",
+    "homepage": "http://www.develandoo.com",
+    "blog": "http://blog.develandoo.com",
+    "role": "Company",
+    "developers": [
+      {
+        "name": "Davit Tumasyan",
+        "email": "davit.tumasyan@develandoo.com"
+      }
+    ]
+  },
+  "require": {
+    "php": ">=5.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "develandoo\\notification\\": "src"
+    }
+  }
+}
