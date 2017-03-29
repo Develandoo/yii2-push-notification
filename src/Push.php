@@ -237,7 +237,7 @@ class Push extends Component
             throw new InvalidConfigException('Apns in not enabled.');
         }
 
-        $path = sprintf('ssl://gateway.push%s.apple.com:2195', ArrayHelper::getValue($this->apnsConfig, 'environment'));
+        $path = sprintf('ssl://gateway%s.push.apple.com:2195', ArrayHelper::getValue($this->apnsConfig, 'environment'));
         $this->ctx = stream_context_create();
         stream_context_set_option($this->ctx, 'ssl', 'local_cert', ArrayHelper::getValue($this->apnsConfig, 'pem'));
 
