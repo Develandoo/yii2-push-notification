@@ -197,10 +197,9 @@ class Push extends Component
         }
 
         if (!empty($id)) {
-            $fields = [
+            $fields = array_merge([
                 'registration_ids' => $id,
-                'data' => $data
-            ];
+            ], $data);
 
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, self::GCM_URL);
