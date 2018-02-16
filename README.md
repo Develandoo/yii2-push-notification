@@ -76,6 +76,21 @@ $push->send([
     'android-token2',
     'ios-token2'
 ], $payload);
+
+// firebase (both ios and android are supported) multiple tokens example
+$push->firebase()->send(['token1','token2'], [
+    // Background (closed) application data.
+    'notification' => [
+        'body' => 'Background application message',
+        'title' => 'AppName',
+        'sound' => 'default',
+    ],
+    // Foreground (running) application data.
+    'data' => [
+        'custom-key' => 'Any custom data could be delivered into foreground application. '
+        . 'In order to simulate push notification, this data should be used inside "local notification" by client application.',
+    ],
+]);
 ```
 
 ### EXCEPTION CASES
