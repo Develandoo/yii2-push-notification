@@ -21,10 +21,7 @@ class Push extends Component
     /* @var $APNS_ENVIRONMENT_PRODUCTION */
     const APNS_ENVIRONMENT_PRODUCTION = '';
 
-    /* @var $GCM_URL */
-    const GCM_URL = 'https://fcm.googleapis.com/fcm/send';
-    
-    /* @var $GCM_URL */
+    /* @var $FCM_URL */
     const FCM_URL = 'https://fcm.googleapis.com/fcm/send';
 
     /* @var $TYPE_APNS */
@@ -33,7 +30,7 @@ class Push extends Component
     /* @var $TYPE_GCM */
     const TYPE_GCM = 'gcm';
 
-    /* @var $TYPE_GCM */
+    /* @var $TYPE_FCM */
     const TYPE_FCM = 'fcm';
 
     /* @var  $apnsConfig array */
@@ -41,7 +38,7 @@ class Push extends Component
 
     /* @var  $gcmConfig array */
     public $gcmConfig;
-    
+
     /* @var  $fcmConfig array */
     public $fcmConfig;
 
@@ -64,7 +61,7 @@ class Push extends Component
     private $ctx;
 
     /**
-     *  SHORT DESCRIPTION GOES HERE
+     *  Develandoo yii2 push notification
      */
     public function init()
     {
@@ -123,7 +120,7 @@ class Push extends Component
             throw new InvalidConfigException('Gcm api access key is invalid.');
         }
     }
-    
+
     /**
      * @throws InvalidConfigException
      */
@@ -135,20 +132,20 @@ class Push extends Component
     }
 
     /**
-     * @param $tokens
+     * @param array $tokens
      * @return array
      */
     private function splitDeviceTokens($tokens)
     {
         $apnsTokens = [];
-        $gcmTokens = [];
+        $firebaseTokens = [];
         $invalidTokens = [];
 
         foreach ($tokens as $token) {
             if (strlen($token) == 64) {
                 $apnsTokens[] = $token;
             } elseif (strlen($token) == 152) {
-                $gcmTokens[] = $token;
+                $firebaseTokens[] = $token;
             } else {
                 $invalidTokens[] = $token;
             }
@@ -156,7 +153,7 @@ class Push extends Component
 
         return [
             'apns' => $apnsTokens,
-            'gcm' => $gcmTokens,
+            'firebase' => $firebaseTokens,
             'invalid' => $invalidTokens
         ];
     }
@@ -189,33 +186,39 @@ class Push extends Component
     }
 
     /**
-     * @param $id
-     * @param $payload
+     * @param array $tokens
+     * @param array $payload
      * @return mixed
+     * @throws Exception
      */
-    public function send($id, $payload)
+    public function send($tokens, $payload = [])
     {
         if ($this->type) {
             switch ($this->type) {
                 case self::TYPE_GCM:
-                    self::sendGcm($id, $payload);
+                    self::sendGcm($tokens, $payload);
                     break;
                 case self::TYPE_FCM:
-                    self::sendFcm($id, $payload);
+                    self::sendFcm($tokens, $payload);
                     break;
                 case self::TYPE_APNS:
-                    self::sendApns($id, $payload);
+                    self::sendApns($tokens, $payload);
                     break;
             }
         } else {
-            $tokens = self::splitDeviceTokens($id);
+            $tokens = self::splitDeviceTokens($tokens);
 
-            if (!empty(ArrayHelper::getValue($tokens, 'apns'))) {
+            if ($this->apnsEnabled && !empty(ArrayHelper::getValue($tokens, 'apns'))) {
                 self::sendApns(ArrayHelper::getValue($tokens, 'apns'), $payload);
             }
 
-            if (!empty(ArrayHelper::getValue($tokens, 'gcm'))) {
-                self::sendGcm(ArrayHelper::getValue($tokens, 'gcm'), $payload);
+            if (!empty(ArrayHelper::getValue($tokens, 'firebase'))) {
+                if ($this->gcmEnabled) {
+                    self::sendGcm(ArrayHelper::getValue($tokens, 'firebase'), $payload);
+                } elseif ($this->fcmEnabled) {
+                    self::sendFcm(ArrayHelper::getValue($tokens, 'firebase'), $payload);
+                }
+
             }
 
             if (is_array($this->options) && ArrayHelper::getValue($this->options, 'returnInvalidTokens', false)) {
@@ -226,24 +229,25 @@ class Push extends Component
 
     /**
      * @deprecated
-     * 
-     * @param $id
-     * @param $data
+     *
+     * @param array $tokens
+     * @param array $data
      * @throws Exception
      */
-    private function sendGcm($id, $data)
+    private function sendGcm($tokens, $data = [])
     {
         if (!$this->gcmEnabled) {
             throw new InvalidConfigException('Gcm in not enabled.');
         }
 
-        if (!empty($id)) {
-            $fields = array_merge([
-                'registration_ids' => $id,
-            ], $data);
+        if (!empty($tokens)) {
+            $fields = [
+                'registration_ids' => $tokens,
+                'data' => $data
+            ];
 
             $curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL, self::GCM_URL);
+            curl_setopt($curl, CURLOPT_URL, self::FCM_URL);
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_HTTPHEADER, [
                 sprintf('Authorization: key=%s', ArrayHelper::getValue($this->gcmConfig, 'apiAccessKey')),
@@ -267,25 +271,23 @@ class Push extends Component
     }
 
     /**
-     * @param $tokens Set of device tokens generated by FCM.
-     * @param $payload Payload of notification. Should contain 'notification'
+     * @param array $tokens Set of device tokens generated by FCM.
+     * @param array $payload Payload of notification. Should contain 'notification'
      * property for background message and 'data' property for foreground
      * message.
      * @throws Exception
      */
-    private function sendFcm($tokens = [], $payload = [])
+    private function sendFcm($tokens, $payload = [])
     {
         if (!$this->fcmEnabled) {
             throw new InvalidConfigException('FCM in not enabled.');
         }
-        
-        if (!empty($tokens)) {
-            $fields = array_merge([
-                'registration_ids' => $tokens,
-                ], $payload);
-        }
 
-        if (!empty($payload)) {
+        if (!empty($tokens)) {
+            $fields = ArrayHelper::merge([
+                'registration_ids' => $tokens
+            ], $payload);
+
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, self::FCM_URL);
             curl_setopt($curl, CURLOPT_POST, true);
@@ -311,8 +313,8 @@ class Push extends Component
     }
 
     /**
-     * @param $token
-     * @param $body
+     * @param array $token
+     * @param array $body
      * @throws Exception
      */
     private function sendApns($token, $body)
