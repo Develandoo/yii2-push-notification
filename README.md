@@ -29,7 +29,10 @@ or add
              ],
              'gcmConfig' => [
                  'apiAccessKey' => 'YOUR_GCM_API_KEY'
-             ]
+             ],
+             'fcmConfig' => [
+                 'apiAccessKey' => 'YOUR_FCM_SERVER_KEY'
+             ],
          ]
      ]
 ```
