@@ -46,24 +46,24 @@ $push->ios()->send('token', [
         'alert' => [
             'loc-key' => 'i18n_key',
             'loc-args' => ['arg1'],
-        ]
+        ],
+        'badge' => 1,
+        'sound' => 'default'
     ],
-    'badge' => 1,
-    'sound' => 'default'
 ]);
 
 // ios multiple tokens example
-$push->ios()->send(['token1,token2'], [
+$push->ios()->send(['token1', 'token2'], [
     'custom-key' => 'custom-value',
     'aps' => [
-        'alert' => 'STRING_MESSAGE'
+        'alert' => 'STRING_MESSAGE',
+        'badge' => 1,
+        'sound' => 'default'
     ],
-    'badge' => 1,
-    'sound' => 'default'
 ]);
 
 // android example
-$push->android()->send(['token1,token2'], [
+$push->android()->send(['token1', 'token2'], [
     'key' => 'i18n_key',
     'args' => ['arg1'],
     'custom-key'=>'custom-value'
