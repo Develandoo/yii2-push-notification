@@ -53,7 +53,7 @@ $push->ios()->send('token', [
 ]);
 
 // ios multiple tokens example
-$push->ios()->send(['token1,token2'], [
+$push->ios()->send(['token1', 'token2'], [
     'custom-key' => 'custom-value',
     'aps' => [
         'alert' => 'STRING_MESSAGE'
@@ -63,7 +63,7 @@ $push->ios()->send(['token1,token2'], [
 ]);
 
 // android example
-$push->android()->send(['token1,token2'], [
+$push->android()->send(['token1', 'token2'], [
     'key' => 'i18n_key',
     'args' => ['arg1'],
     'custom-key'=>'custom-value'
